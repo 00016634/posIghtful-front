@@ -1,0 +1,34 @@
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { NgClass, NgFor } from '@angular/common';
+
+@Component({
+  selector: 'ui-tabs-list',
+  standalone: true,
+  imports: [NgClass, NgFor],
+  template: `
+    <div [ngClass]="['inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground', className]">
+      <button
+        *ngFor="let tab of tabs"
+        type="button"
+        [ngClass]="[
+          'inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+          tab === activeTab ? 'bg-background text-foreground shadow' : ''
+        ]"
+        (click)="selectTab(tab)"
+      >
+        {{ tab }}
+      </button>
+    </div>
+  `,
+})
+export class TabsListComponent {
+  @Input() tabs: string[] = [];
+  @Input() activeTab = '';
+  @Input() className = '';
+  @Output() activeTabChange = new EventEmitter<string>();
+
+  selectTab(tab: string) {
+    this.activeTab = tab;
+    this.activeTabChange.emit(tab);
+  }
+}

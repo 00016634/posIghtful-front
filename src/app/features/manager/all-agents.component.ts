@@ -1,0 +1,238 @@
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { PageLayoutComponent, PageHeaderComponent } from '../../shared/layouts';
+import {
+  TableComponent,
+  TableHeaderComponent,
+  TableBodyComponent,
+  TableRowComponent,
+  TableHeadComponent,
+  TableCellComponent,
+  AvatarComponent,
+  BadgeComponent,
+  InputComponent,
+  SelectComponent,
+  CardComponent,
+  CardContentComponent,
+} from '../../shared/ui';
+import { AgentService } from '../../services/agent.service';
+
+@Component({
+  selector: 'app-all-agents',
+  standalone: true,
+  imports: [
+    PageLayoutComponent,
+    PageHeaderComponent,
+    TableComponent,
+    TableHeaderComponent,
+    TableBodyComponent,
+    TableRowComponent,
+    TableHeadComponent,
+    TableCellComponent,
+    AvatarComponent,
+    BadgeComponent,
+    InputComponent,
+    SelectComponent,
+    CardComponent,
+    CardContentComponent,
+  ],
+  template: `
+    <app-page-layout>
+      <app-page-header
+        title="All Agents"
+        subtitle="View and manage all personnel"
+        backRoute="/manager"
+      />
+
+      <!-- Filters -->
+      <ui-card className="mb-6">
+        <ui-card-content className="p-4">
+          <div class="flex flex-col md:flex-row gap-4">
+            <div class="flex-1">
+              <input
+                type="text"
+                class="flex h-9 w-full rounded-md border border-input bg-input-background px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                placeholder="Search by name, code, or region..."
+                [value]="searchTerm()"
+                (input)="onSearch($event)"
+              />
+            </div>
+            <div class="w-full md:w-40">
+              <select
+                class="flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-input-background px-3 py-2 text-sm shadow-sm ring-offset-background focus:outline-none focus:ring-1 focus:ring-ring"
+                [value]="roleFilter()"
+                (change)="onRoleFilter($event)"
+              >
+                <option value="all">All Roles</option>
+                <option value="agent">Agent</option>
+                <option value="supervisor">Supervisor</option>
+              </select>
+            </div>
+            <div class="w-full md:w-40">
+              <select
+                class="flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-input-background px-3 py-2 text-sm shadow-sm ring-offset-background focus:outline-none focus:ring-1 focus:ring-ring"
+                [value]="regionFilter()"
+                (change)="onRegionFilter($event)"
+              >
+                <option value="all">All Regions</option>
+                @for (region of regions(); track region) {
+                  <option [value]="region">{{ region }}</option>
+                }
+              </select>
+            </div>
+            <div class="w-full md:w-40">
+              <select
+                class="flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-input-background px-3 py-2 text-sm shadow-sm ring-offset-background focus:outline-none focus:ring-1 focus:ring-ring"
+                [value]="statusFilter()"
+                (change)="onStatusFilter($event)"
+              >
+                <option value="all">All Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+          </div>
+        </ui-card-content>
+      </ui-card>
+
+      <!-- Table -->
+      <ui-card>
+        <ui-card-content>
+          <ui-table>
+            <ui-table-header>
+              <ui-table-row>
+                <ui-table-head>Person</ui-table-head>
+                <ui-table-head>Role</ui-table-head>
+                <ui-table-head>Region</ui-table-head>
+                <ui-table-head>Supervisor</ui-table-head>
+                <ui-table-head className="text-center">Leads</ui-table-head>
+                <ui-table-head className="text-center">Conversions</ui-table-head>
+                <ui-table-head className="text-right">Revenue</ui-table-head>
+                <ui-table-head className="text-center">Status</ui-table-head>
+                <ui-table-head className="text-center">Actions</ui-table-head>
+              </ui-table-row>
+            </ui-table-header>
+            <ui-table-body>
+              @for (person of filteredPersonnel(); track person.id) {
+                <ui-table-row className="cursor-pointer" (click)="goToDetail(person)">
+                  <ui-table-cell>
+                    <div class="flex items-center gap-3">
+                      <ui-avatar
+                        [src]="person.profileImage"
+                        [alt]="person.fullName"
+                        [fallback]="getInitials(person.fullName)"
+                        size="sm"
+                      />
+                      <div>
+                        <div class="font-medium">{{ person.fullName }}</div>
+                        <div class="text-xs text-muted-foreground">{{ person.agentCode }}</div>
+                      </div>
+                    </div>
+                  </ui-table-cell>
+                  <ui-table-cell>
+                    <ui-badge [variant]="person.role === 'supervisor' ? 'default' : 'secondary'">
+                      {{ person.role === 'supervisor' ? 'Supervisor' : 'Agent' }}
+                    </ui-badge>
+                  </ui-table-cell>
+                  <ui-table-cell>{{ person.region }}</ui-table-cell>
+                  <ui-table-cell>{{ person.supervisor }}</ui-table-cell>
+                  <ui-table-cell className="text-center">{{ person.leads }}</ui-table-cell>
+                  <ui-table-cell className="text-center">{{ person.conversions }}</ui-table-cell>
+                  <ui-table-cell className="text-right font-medium">{{ formatCurrency(person.revenue) }}</ui-table-cell>
+                  <ui-table-cell className="text-center">
+                    <ui-badge [variant]="person.status === 'active' ? 'default' : 'destructive'" [className]="person.status === 'active' ? 'bg-green-600' : ''">
+                      {{ person.status }}
+                    </ui-badge>
+                  </ui-table-cell>
+                  <ui-table-cell className="text-center">
+                    <button
+                      class="text-sm text-primary hover:underline"
+                      (click)="goToDetail(person); $event.stopPropagation()"
+                    >
+                      View
+                    </button>
+                  </ui-table-cell>
+                </ui-table-row>
+              } @empty {
+                <ui-table-row>
+                  <ui-table-cell className="text-center py-8 text-muted-foreground" [attr.colspan]="9">
+                    No personnel found matching your criteria
+                  </ui-table-cell>
+                </ui-table-row>
+              }
+            </ui-table-body>
+          </ui-table>
+        </ui-card-content>
+      </ui-card>
+    </app-page-layout>
+  `,
+})
+export class AllAgentsComponent implements OnInit {
+  private agentService = inject(AgentService);
+  private router = inject(Router);
+
+  personnel = signal<any[]>([]);
+  searchTerm = signal('');
+  roleFilter = signal('all');
+  regionFilter = signal('all');
+  statusFilter = signal('all');
+
+  regions = computed(() => {
+    const allRegions = this.personnel().map(p => p.region);
+    return [...new Set(allRegions)].sort();
+  });
+
+  filteredPersonnel = computed(() => {
+    let list = this.personnel();
+    const term = this.searchTerm().toLowerCase();
+    if (term) {
+      list = list.filter(p =>
+        p.fullName.toLowerCase().includes(term) ||
+        p.agentCode.toLowerCase().includes(term) ||
+        p.region.toLowerCase().includes(term)
+      );
+    }
+    if (this.roleFilter() !== 'all') {
+      list = list.filter(p => p.role === this.roleFilter());
+    }
+    if (this.regionFilter() !== 'all') {
+      list = list.filter(p => p.region === this.regionFilter());
+    }
+    if (this.statusFilter() !== 'all') {
+      list = list.filter(p => p.status === this.statusFilter());
+    }
+    return list;
+  });
+
+  ngOnInit() {
+    this.agentService.getAllPersonnel().subscribe(data => this.personnel.set(data));
+  }
+
+  onSearch(event: Event) {
+    this.searchTerm.set((event.target as HTMLInputElement).value);
+  }
+
+  onRoleFilter(event: Event) {
+    this.roleFilter.set((event.target as HTMLSelectElement).value);
+  }
+
+  onRegionFilter(event: Event) {
+    this.regionFilter.set((event.target as HTMLSelectElement).value);
+  }
+
+  onStatusFilter(event: Event) {
+    this.statusFilter.set((event.target as HTMLSelectElement).value);
+  }
+
+  goToDetail(person: any) {
+    this.router.navigateByUrl(`/manager/${person.role}/${person.id}`);
+  }
+
+  getInitials(name: string): string {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  }
+
+  formatCurrency(value: number): string {
+    return '$' + value.toLocaleString();
+  }
+}
