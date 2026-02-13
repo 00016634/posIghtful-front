@@ -1,19 +1,21 @@
 export interface User {
   id: number;
+  username: string;
   email: string;
-  first_name: string;
-  last_name: string;
-  tenant_id: number;
+  phone_number: string;
+  full_name: string;
+  tenant: number | null;
   is_active: boolean;
-  is_superuser: boolean;
-  date_joined: string;
-  last_login?: string;
+  is_staff: boolean;
+  is_superuser?: boolean;
+  created_at: string;
   roles?: Role[];
 }
 
 export interface Role {
   id: number;
-  name: 'AGENT' | 'MANAGER' | 'FINANCE' | 'ADMIN';
+  code: string;
+  name: string;
   description?: string;
 }
 
@@ -21,6 +23,7 @@ export interface AuthResponse {
   access: string;
   refresh: string;
   user: User;
+  message?: string;
 }
 
 export interface LoginRequest {
@@ -29,9 +32,11 @@ export interface LoginRequest {
 }
 
 export interface RegisterRequest {
+  username: string;
   email: string;
+  phone_number: string;
+  full_name?: string;
   password: string;
-  first_name: string;
-  last_name: string;
-  tenant_id?: number;
+  password2: string;
+  tenant?: number;
 }

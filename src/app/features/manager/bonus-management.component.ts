@@ -1,8 +1,133 @@
-import { Component } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { PageLayoutComponent } from '../../shared/layouts/page-layout.component';
+import { ConversionChartComponent } from '../../shared/components/conversion-chart.component';
+import {
+  CardComponent, CardHeaderComponent, CardTitleComponent, CardContentComponent,
+  ButtonComponent,
+} from '../../shared/ui';
+import { BonusService } from '../../services/bonus.service';
 
 @Component({
   selector: 'app-bonus-management',
   standalone: true,
-  template: `<div class="min-h-screen bg-gray-50 p-4 md:p-8"><h1 class="text-2xl font-bold">Bonus Management</h1><p class="text-muted-foreground mt-2">Coming soon...</p></div>`,
+  imports: [
+    PageLayoutComponent, ConversionChartComponent,
+    CardComponent, CardHeaderComponent, CardTitleComponent, CardContentComponent,
+    ButtonComponent,
+  ],
+  template: `
+    <app-page-layout>
+      <div class="mx-auto max-w-7xl space-y-6">
+        <!-- Header -->
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-4">
+            <ui-button variant="ghost" size="icon" (click)="router.navigateByUrl('/manager')">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+            </ui-button>
+            <div>
+              <h1 class="text-2xl font-semibold">Bonus Management</h1>
+              <p class="text-sm text-muted-foreground">Overview and rule configuration</p>
+            </div>
+          </div>
+          <ui-button (click)="router.navigateByUrl('/manager/bonus-management/rules')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+            Manage Bonus Rules
+          </ui-button>
+        </div>
+
+        @if (currentMonth()) {
+          <!-- Current Month Overview -->
+          <ui-card>
+            <ui-card-header>
+              <ui-card-title>Current Month - {{ currentMonth()!.month }}</ui-card-title>
+            </ui-card-header>
+            <ui-card-content>
+              <div class="grid grid-cols-3 gap-6">
+                <div>
+                  <p class="text-sm text-muted-foreground">Total Bonus Expenses</p>
+                  <p class="text-3xl font-semibold text-green-600">\${{ formatNumber(currentMonth()!.totalBonus) }}</p>
+                </div>
+                <div>
+                  <p class="text-sm text-muted-foreground">Active Agents</p>
+                  <p class="text-3xl font-semibold">{{ currentMonth()!.agentCount }}</p>
+                </div>
+                <div>
+                  <p class="text-sm text-muted-foreground">Average per Agent</p>
+                  <p class="text-3xl font-semibold">\${{ formatNumber(currentMonth()!.avgPerAgent) }}</p>
+                </div>
+              </div>
+            </ui-card-content>
+          </ui-card>
+
+          <!-- Bonus Trend Chart -->
+          <ui-card>
+            <ui-card-header>
+              <ui-card-title>Bonus Expenses Trend</ui-card-title>
+            </ui-card-header>
+            <ui-card-content>
+              <app-conversion-chart
+                [labels]="chartLabels()"
+                [datasets]="chartDatasets()"
+                chartType="bar"
+                height="300px"
+              />
+            </ui-card-content>
+          </ui-card>
+
+          <!-- Monthly Breakdown -->
+          <ui-card>
+            <ui-card-header>
+              <ui-card-title>Monthly Breakdown</ui-card-title>
+            </ui-card-header>
+            <ui-card-content>
+              <div class="space-y-2">
+                @for (data of monthlyBonuses(); track data.month) {
+                  <div
+                    class="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                    (click)="router.navigateByUrl('/manager/bonus-management/month/' + data.month)"
+                  >
+                    <div>
+                      <p class="font-medium">{{ data.month }}</p>
+                      <p class="text-sm text-muted-foreground">{{ data.agentCount }} agents</p>
+                    </div>
+                    <div class="text-right">
+                      <p class="text-lg font-semibold text-green-600">\${{ formatNumber(data.totalBonus) }}</p>
+                      <p class="text-sm text-muted-foreground">Avg: \${{ formatNumber(data.avgPerAgent) }}</p>
+                    </div>
+                  </div>
+                }
+              </div>
+            </ui-card-content>
+          </ui-card>
+        }
+      </div>
+    </app-page-layout>
+  `,
 })
-export class BonusManagementComponent {}
+export class BonusManagementComponent implements OnInit {
+  router = inject(Router);
+  private bonusService = inject(BonusService);
+
+  monthlyBonuses = signal<any[]>([]);
+  currentMonth = signal<any>(null);
+  chartLabels = signal<string[]>([]);
+  chartDatasets = signal<any[]>([]);
+
+  ngOnInit() {
+    this.bonusService.getMonthlyBonuses().subscribe(data => {
+      this.monthlyBonuses.set(data);
+      if (data.length > 0) {
+        this.currentMonth.set(data[0]);
+        this.chartLabels.set(data.slice().reverse().map((d: any) => d.month));
+        this.chartDatasets.set([
+          { name: 'Bonus Amount', data: data.slice().reverse().map((d: any) => d.totalBonus), color: '#10b981' },
+        ]);
+      }
+    });
+  }
+
+  formatNumber(value: number): string {
+    return value.toLocaleString();
+  }
+}

@@ -10,8 +10,6 @@ import {
   TableCellComponent,
   AvatarComponent,
   BadgeComponent,
-  InputComponent,
-  SelectComponent,
   CardComponent,
   CardContentComponent,
 } from '../../shared/ui';
@@ -31,8 +29,6 @@ import { AgentService } from '../../services/agent.service';
     TableCellComponent,
     AvatarComponent,
     BadgeComponent,
-    InputComponent,
-    SelectComponent,
     CardComponent,
     CardContentComponent,
   ],

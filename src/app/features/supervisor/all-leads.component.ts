@@ -1,11 +1,13 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { TitleCasePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PageLayoutComponent, PageHeaderComponent } from '../../shared/layouts';
 import {
+  CardComponent,
   TableComponent, TableHeaderComponent, TableBodyComponent, TableRowComponent,
-  TableHeadComponent, TableCellComponent, BadgeComponent, InputComponent,
+  TableHeadComponent, TableCellComponent,
   SelectComponent, DialogComponent, DialogHeaderComponent, DialogTitleComponent,
-  DialogFooterComponent, ButtonComponent, LabelComponent,
+  DialogFooterComponent, LabelComponent,
 } from '../../shared/ui';
 import { LeadService } from '../../services/lead.service';
 import { ToastService } from '../../shared/ui/toast.service';
@@ -15,22 +17,21 @@ import { ToastService } from '../../shared/ui/toast.service';
   standalone: true,
   imports: [
     FormsModule,
+    TitleCasePipe,
     PageLayoutComponent,
     PageHeaderComponent,
+    CardComponent,
     TableComponent,
     TableHeaderComponent,
     TableBodyComponent,
     TableRowComponent,
     TableHeadComponent,
     TableCellComponent,
-    BadgeComponent,
-    InputComponent,
     SelectComponent,
     DialogComponent,
     DialogHeaderComponent,
     DialogTitleComponent,
     DialogFooterComponent,
-    ButtonComponent,
     LabelComponent,
   ],
   template: `

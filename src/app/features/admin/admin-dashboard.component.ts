@@ -1,8 +1,124 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { PageLayoutComponent } from '../../shared/layouts/page-layout.component';
+import {
+  CardComponent, CardHeaderComponent, CardTitleComponent, CardContentComponent,
+  ButtonComponent,
+} from '../../shared/ui';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  template: `<div class="min-h-screen bg-gray-50 p-4 md:p-8"><h1 class="text-2xl font-bold">Admin Dashboard</h1><p class="text-muted-foreground mt-2">Coming soon...</p></div>`,
+  imports: [
+    PageLayoutComponent,
+    CardComponent, CardHeaderComponent, CardTitleComponent, CardContentComponent,
+    ButtonComponent,
+  ],
+  template: `
+    <app-page-layout>
+      <div class="mx-auto max-w-7xl space-y-6">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h1 class="text-2xl font-semibold">Admin Dashboard</h1>
+            <p class="text-sm text-muted-foreground">Manage users, products, and tenant settings</p>
+          </div>
+          <div class="flex gap-2">
+            <ui-button (click)="router.navigateByUrl('/admin/users/new')">Add User</ui-button>
+            <ui-button variant="outline" (click)="router.navigateByUrl('/admin/products')">Add Product</ui-button>
+          </div>
+        </div>
+
+        <ui-card className="border-blue-200 bg-blue-50">
+          <ui-card-content className="pt-6">
+            <div class="flex items-center gap-3">
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-blue-600"><rect width="16" height="20" x="4" y="2" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>
+              <div>
+                <p class="text-sm text-blue-900 font-medium">Current Tenant</p>
+                <p class="text-lg font-semibold text-blue-900">Acme Insurance Corp</p>
+              </div>
+            </div>
+          </ui-card-content>
+        </ui-card>
+
+        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <ui-card>
+            <ui-card-header className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <ui-card-title className="text-sm font-medium">Total Users</ui-card-title>
+            </ui-card-header>
+            <ui-card-content>
+              <div class="text-2xl font-semibold">48</div>
+              <p class="text-xs text-muted-foreground mt-1">45 active</p>
+            </ui-card-content>
+          </ui-card>
+          <ui-card>
+            <ui-card-header className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <ui-card-title className="text-sm font-medium">Products</ui-card-title>
+            </ui-card-header>
+            <ui-card-content>
+              <div class="text-2xl font-semibold">8</div>
+              <p class="text-xs text-muted-foreground mt-1">Active products</p>
+            </ui-card-content>
+          </ui-card>
+          <ui-card class="cursor-pointer hover:shadow-md transition-shadow" (click)="router.navigateByUrl('/admin/users')">
+            <ui-card-header className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <ui-card-title className="text-sm font-medium">User Management</ui-card-title>
+            </ui-card-header>
+            <ui-card-content>
+              <p class="text-sm text-muted-foreground">Manage all system users</p>
+              <span class="text-sm text-primary font-medium mt-2 inline-block">View All Users &rarr;</span>
+            </ui-card-content>
+          </ui-card>
+          <ui-card class="cursor-pointer hover:shadow-md transition-shadow" (click)="router.navigateByUrl('/admin/products')">
+            <ui-card-header className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <ui-card-title className="text-sm font-medium">Product Management</ui-card-title>
+            </ui-card-header>
+            <ui-card-content>
+              <p class="text-sm text-muted-foreground">Manage product catalog</p>
+              <span class="text-sm text-primary font-medium mt-2 inline-block">View All Products &rarr;</span>
+            </ui-card-content>
+          </ui-card>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6">
+          <ui-card>
+            <ui-card-header>
+              <ui-card-title>Quick Actions</ui-card-title>
+            </ui-card-header>
+            <ui-card-content className="space-y-2">
+              <ui-button variant="outline" className="w-full justify-start" (click)="router.navigateByUrl('/admin/users/new')">Create New User</ui-button>
+              <ui-button variant="outline" className="w-full justify-start" (click)="router.navigateByUrl('/admin/products')">Add New Product</ui-button>
+              <ui-button variant="outline" className="w-full justify-start" (click)="router.navigateByUrl('/admin/users')">View All Users</ui-button>
+            </ui-card-content>
+          </ui-card>
+          <ui-card>
+            <ui-card-header>
+              <ui-card-title>Recent Activity</ui-card-title>
+            </ui-card-header>
+            <ui-card-content>
+              <div class="space-y-4">
+                @for (a of recentActivity; track a.detail) {
+                  <div class="flex justify-between items-start pb-3 border-b last:border-b-0 last:pb-0">
+                    <div>
+                      <p class="font-medium text-sm">{{ a.action }}</p>
+                      <p class="text-sm text-muted-foreground">{{ a.detail }}</p>
+                    </div>
+                    <p class="text-xs text-muted-foreground whitespace-nowrap ml-4">{{ a.time }}</p>
+                  </div>
+                }
+              </div>
+            </ui-card-content>
+          </ui-card>
+        </div>
+      </div>
+    </app-page-layout>
+  `,
 })
-export class AdminDashboardComponent {}
+export class AdminDashboardComponent {
+  router = inject(Router);
+  recentActivity = [
+    { action: 'User Created', detail: 'John Smith (Agent)', time: '2 hours ago' },
+    { action: 'Product Added', detail: 'Premium Plus Package', time: '1 day ago' },
+    { action: 'User Updated', detail: 'Sarah Johnson - Role changed to Supervisor', time: '2 days ago' },
+    { action: 'User Created', detail: 'Emily Davis (Agent)', time: '3 days ago' },
+  ];
+}

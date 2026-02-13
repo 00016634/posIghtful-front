@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { PageLayoutComponent } from '../../shared/layouts/page-layout.component';
 import { PageHeaderComponent } from '../../shared/layouts/page-header.component';
-import { CardComponent, CardHeaderComponent, CardTitleComponent, CardContentComponent, CardFooterComponent } from '../../shared/ui/card.component';
+import { CardComponent, CardHeaderComponent, CardTitleComponent, CardContentComponent } from '../../shared/ui/card.component';
 import { LabelComponent } from '../../shared/ui/label.component';
 import { InputComponent } from '../../shared/ui/input.component';
 import { ButtonComponent } from '../../shared/ui/button.component';
@@ -20,7 +20,6 @@ import { SeparatorComponent } from '../../shared/ui/separator.component';
     CardHeaderComponent,
     CardTitleComponent,
     CardContentComponent,
-    CardFooterComponent,
     LabelComponent,
     InputComponent,
     ButtonComponent,

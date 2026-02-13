@@ -1,8 +1,105 @@
-import { Component } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
+import { Router } from '@angular/router';
+import { PageLayoutComponent } from '../../shared/layouts/page-layout.component';
+import {
+  CardComponent, CardHeaderComponent, CardTitleComponent, CardContentComponent,
+  ButtonComponent, TableComponent, TableHeaderComponent, TableBodyComponent,
+  TableRowComponent, TableHeadComponent, TableCellComponent, ScrollAreaComponent,
+} from '../../shared/ui';
+import { ProductService } from '../../services/product.service';
 
 @Component({
   selector: 'app-bonuses-details',
   standalone: true,
-  template: `<div class="min-h-screen bg-gray-50 p-4 md:p-8"><h1 class="text-2xl font-bold">Bonuses Details</h1><p class="text-muted-foreground mt-2">Coming soon...</p></div>`,
+  imports: [
+    DecimalPipe,
+    PageLayoutComponent,
+    CardComponent, CardHeaderComponent, CardTitleComponent, CardContentComponent,
+    ButtonComponent, TableComponent, TableHeaderComponent, TableBodyComponent,
+    TableRowComponent, TableHeadComponent, TableCellComponent, ScrollAreaComponent,
+  ],
+  template: `
+    <app-page-layout>
+      <div class="mx-auto max-w-7xl space-y-6">
+        <!-- Header -->
+        <div class="flex items-center gap-4">
+          <ui-button variant="ghost" size="icon" (click)="router.navigateByUrl('/agent')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+          </ui-button>
+          <div>
+            <h1 class="text-2xl font-semibold">Bonus Details</h1>
+            <p class="text-sm text-muted-foreground">Successful conversions breakdown</p>
+          </div>
+        </div>
+
+        <ui-card>
+          <ui-card-header>
+            <ui-card-title>Successful Conversions Details</ui-card-title>
+          </ui-card-header>
+          <ui-card-content className="space-y-6">
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div class="space-y-1">
+                <p class="text-sm text-muted-foreground">Total Conversions</p>
+                <p class="text-2xl font-semibold">{{ conversions().length }}</p>
+              </div>
+              <div class="space-y-1">
+                <p class="text-sm text-muted-foreground">Total Purchases</p>
+                <p class="text-2xl font-semibold">\${{ totalPurchases() | number }}</p>
+              </div>
+              <div class="space-y-1">
+                <p class="text-sm text-muted-foreground">Total Bonuses</p>
+                <p class="text-2xl font-semibold text-green-600">\${{ totalBonuses() | number }}</p>
+              </div>
+            </div>
+
+            <!-- Conversions Table -->
+            <ui-scroll-area className="h-[600px] rounded-md border">
+              <ui-table>
+                <ui-table-header>
+                  <ui-table-row>
+                    <ui-table-head>Lead ID</ui-table-head>
+                    <ui-table-head>Phone Number</ui-table-head>
+                    <ui-table-head>Converted Date</ui-table-head>
+                    <ui-table-head className="text-right">Purchase Amount</ui-table-head>
+                    <ui-table-head className="text-right">Bonus Received</ui-table-head>
+                  </ui-table-row>
+                </ui-table-header>
+                <ui-table-body>
+                  @for (conv of conversions(); track conv.leadId) {
+                    <ui-table-row>
+                      <ui-table-cell className="font-medium">{{ conv.leadId }}</ui-table-cell>
+                      <ui-table-cell>{{ conv.phoneNumber }}</ui-table-cell>
+                      <ui-table-cell>{{ conv.convertedDate }}</ui-table-cell>
+                      <ui-table-cell className="text-right">\${{ conv.purchaseAmount | number }}</ui-table-cell>
+                      <ui-table-cell className="text-right text-green-600 font-medium">\${{ conv.bonusReceived | number }}</ui-table-cell>
+                    </ui-table-row>
+                  }
+                </ui-table-body>
+              </ui-table>
+            </ui-scroll-area>
+          </ui-card-content>
+        </ui-card>
+      </div>
+    </app-page-layout>
+  `,
 })
-export class BonusesDetailsComponent {}
+export class BonusesDetailsComponent implements OnInit {
+  router = inject(Router);
+  private productService = inject(ProductService);
+
+  conversions = signal<any[]>([]);
+
+  totalPurchases = computed(() =>
+    this.conversions().reduce((sum, c) => sum + c.purchaseAmount, 0)
+  );
+
+  totalBonuses = computed(() =>
+    this.conversions().reduce((sum, c) => sum + c.bonusReceived, 0)
+  );
+
+  ngOnInit() {
+    this.productService.getConversions().subscribe(data => this.conversions.set(data));
+  }
+}

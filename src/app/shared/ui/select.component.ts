@@ -1,4 +1,4 @@
-import { Component, Input, forwardRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, forwardRef } from '@angular/core';
 import { NgClass } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
@@ -17,7 +17,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
     <select
       [ngClass]="computedClasses"
       [disabled]="isDisabled"
-      [value]="value"
+      [value]="currentValue"
       (change)="onSelect($event)"
       (blur)="onTouched()"
     >
@@ -27,8 +27,9 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 })
 export class SelectComponent implements ControlValueAccessor {
   @Input() className = '';
+  @Input() set value(val: string) { this.currentValue = val ?? ''; }
 
-  value = '';
+  currentValue = '';
   isDisabled = false;
   onChange: (value: string) => void = () => {};
   onTouched: () => void = () => {};
@@ -42,12 +43,12 @@ export class SelectComponent implements ControlValueAccessor {
 
   onSelect(event: Event) {
     const val = (event.target as HTMLSelectElement).value;
-    this.value = val;
+    this.currentValue = val;
     this.onChange(val);
   }
 
   writeValue(value: string) {
-    this.value = value ?? '';
+    this.currentValue = value ?? '';
   }
 
   registerOnChange(fn: (value: string) => void) {

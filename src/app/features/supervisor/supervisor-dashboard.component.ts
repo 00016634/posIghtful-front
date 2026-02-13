@@ -1,14 +1,16 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { PageLayoutComponent, PageHeaderComponent } from '../../shared/layouts';
 import { AnalyticsCardComponent, ConversionChartComponent } from '../../shared/components';
-import { CardComponent, CardHeaderComponent, CardTitleComponent, CardContentComponent, ButtonComponent } from '../../shared/ui';
+import { CardComponent, CardHeaderComponent, CardTitleComponent, CardContentComponent } from '../../shared/ui';
 import { AnalyticsService } from '../../services/analytics.service';
 
 @Component({
   selector: 'app-supervisor-dashboard',
   standalone: true,
   imports: [
+    DecimalPipe,
     PageLayoutComponent,
     PageHeaderComponent,
     AnalyticsCardComponent,
@@ -17,7 +19,6 @@ import { AnalyticsService } from '../../services/analytics.service';
     CardHeaderComponent,
     CardTitleComponent,
     CardContentComponent,
-    ButtonComponent,
   ],
   template: `
     <app-page-layout>

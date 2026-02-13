@@ -8,43 +8,43 @@ export const routes: Routes = [
   },
   {
     path: 'login',
-    loadComponent: () => import('./components/auth/login/login').then(m => m.Login),
+    loadComponent: () => import('./features/auth/login/login.component').then(m => m.LoginComponent),
     canActivate: [guestGuard],
   },
   {
     path: 'register',
-    loadComponent: () => import('./components/auth/register/register').then(m => m.Register),
+    loadComponent: () => import('./features/auth/register/register.component').then(m => m.RegisterComponent),
     canActivate: [guestGuard],
   },
   {
     path: 'agent',
     loadChildren: () => import('./features/agent/agent.routes').then(m => m.agentRoutes),
     canActivate: [authGuard],
+    data: { role: 'AGENT' },
   },
   {
     path: 'supervisor',
     loadChildren: () => import('./features/supervisor/supervisor.routes').then(m => m.supervisorRoutes),
     canActivate: [authGuard],
+    data: { role: 'SUPERVISOR' },
   },
   {
     path: 'manager',
     loadChildren: () => import('./features/manager/manager.routes').then(m => m.managerRoutes),
     canActivate: [authGuard],
+    data: { role: 'MANAGER' },
   },
   {
     path: 'accountant',
     loadChildren: () => import('./features/accountant/accountant.routes').then(m => m.accountantRoutes),
     canActivate: [authGuard],
+    data: { role: 'ACCOUNTANT' },
   },
   {
     path: 'admin',
     loadChildren: () => import('./features/admin/admin.routes').then(m => m.adminRoutes),
     canActivate: [authGuard],
-  },
-  {
-    path: 'dashboard',
-    loadComponent: () => import('./components/dashboard/dashboard').then(m => m.Dashboard),
-    canActivate: [authGuard],
+    data: { role: 'ADMIN' },
   },
   {
     path: '**',

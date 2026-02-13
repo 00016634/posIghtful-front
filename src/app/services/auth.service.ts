@@ -78,7 +78,7 @@ export class AuthService {
 
   hasRole(role: string): boolean {
     const user = this.currentUserValue;
-    return user?.roles?.some(r => r.name === role) ?? false;
+    return user?.roles?.some(r => r.code === role || r.name === role) ?? false;
   }
 
   isAgent(): boolean {
@@ -87,6 +87,14 @@ export class AuthService {
 
   isManager(): boolean {
     return this.hasRole('MANAGER');
+  }
+
+  isSupervisor(): boolean {
+    return this.hasRole('SUPERVISOR');
+  }
+
+  isAccountant(): boolean {
+    return this.hasRole('ACCOUNTANT') || this.hasRole('FINANCE');
   }
 
   isFinance(): boolean {

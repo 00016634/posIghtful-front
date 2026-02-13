@@ -32,7 +32,21 @@ export const guestGuard: CanActivateFn = () => {
     return true;
   }
 
-  // Already authenticated, redirect to dashboard
-  router.navigate(['/dashboard']);
+  // Already authenticated, redirect to role-based dashboard
+  router.navigate([getRoleDashboardPath(authService)]);
   return false;
 };
+
+function getRoleDashboardPath(authService: AuthService): string {
+  const user = authService.currentUserValue;
+  const role = user?.roles?.[0]?.name;
+  switch (role) {
+    case 'AGENT': return '/agent';
+    case 'SUPERVISOR': return '/supervisor';
+    case 'MANAGER': return '/manager';
+    case 'ACCOUNTANT':
+    case 'FINANCE': return '/accountant';
+    case 'ADMIN': return '/admin';
+    default: return '/';
+  }
+}

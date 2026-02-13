@@ -1,8 +1,113 @@
-import { Component } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { QRCodeComponent } from 'angularx-qrcode';
+import { PageLayoutComponent } from '../../shared/layouts/page-layout.component';
+import {
+  CardComponent, CardHeaderComponent, CardTitleComponent, CardContentComponent,
+  ButtonComponent, AvatarComponent, SeparatorComponent,
+} from '../../shared/ui';
+import { AgentService } from '../../services/agent.service';
 
 @Component({
   selector: 'app-person-info',
   standalone: true,
-  template: `<div class="min-h-screen bg-gray-50 p-4 md:p-8"><h1 class="text-2xl font-bold">Person Info</h1><p class="text-muted-foreground mt-2">Coming soon...</p></div>`,
+  imports: [
+    QRCodeComponent,
+    PageLayoutComponent,
+    CardComponent, CardHeaderComponent, CardTitleComponent, CardContentComponent,
+    ButtonComponent, AvatarComponent, SeparatorComponent,
+  ],
+  template: `
+    <app-page-layout>
+      <div class="max-w-4xl mx-auto">
+        <ui-button variant="ghost" className="mb-6" (click)="router.navigateByUrl('/agent')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+          Back to Dashboard
+        </ui-button>
+
+        <ui-card>
+          <ui-card-header>
+            <ui-card-title>Agent Information</ui-card-title>
+          </ui-card-header>
+          <ui-card-content className="space-y-8">
+            <!-- Profile Section -->
+            <div class="flex flex-col items-center space-y-4">
+              <ui-avatar
+                [fallback]="getInitials(profile().fullName)"
+                size="lg"
+                className="h-32 w-32 text-2xl"
+              />
+              <div class="text-center">
+                <h2 class="text-2xl font-medium">{{ profile().fullName }}</h2>
+                <p class="text-muted-foreground">{{ profile().agentCode }}</p>
+              </div>
+            </div>
+
+            <ui-separator />
+
+            <!-- Details Section -->
+            <div class="grid gap-6">
+              <div class="grid grid-cols-3 items-center">
+                <label class="font-medium text-muted-foreground">Phone:</label>
+                <span class="col-span-2">{{ profile().phone }}</span>
+              </div>
+              <div class="grid grid-cols-3 items-center">
+                <label class="font-medium text-muted-foreground">Region:</label>
+                <span class="col-span-2">{{ profile().region }}</span>
+              </div>
+              <div class="grid grid-cols-3 items-center">
+                <label class="font-medium text-muted-foreground">Supervisor:</label>
+                <span class="col-span-2">{{ profile().supervisor }}</span>
+              </div>
+              <div class="grid grid-cols-3 items-center">
+                <label class="font-medium text-muted-foreground">Hire Date:</label>
+                <span class="col-span-2">{{ profile().hireDate }}</span>
+              </div>
+            </div>
+
+            <ui-separator />
+
+            <!-- QR Code Section -->
+            <div class="flex flex-col items-center space-y-4 py-4">
+              <div class="bg-white p-6 rounded-lg shadow-sm border">
+                <qrcode
+                  [qrdata]="'AGENT:' + profile().agentCode + '|NAME:' + profile().fullName"
+                  [width]="200"
+                  errorCorrectionLevel="H"
+                />
+              </div>
+              <div class="text-center max-w-md">
+                <p class="text-sm text-muted-foreground">
+                  Scan this QR code for verifying that the person is official representation of the company
+                </p>
+              </div>
+            </div>
+          </ui-card-content>
+        </ui-card>
+      </div>
+    </app-page-layout>
+  `,
 })
-export class PersonInfoComponent {}
+export class PersonInfoComponent implements OnInit {
+  router = inject(Router);
+  private agentService = inject(AgentService);
+
+  profile = signal({
+    fullName: '',
+    agentCode: '',
+    phone: '',
+    region: '',
+    supervisor: '',
+    hireDate: '',
+  });
+
+  ngOnInit() {
+    this.agentService.getAgentProfile().subscribe(data => {
+      if (data) this.profile.set(data);
+    });
+  }
+
+  getInitials(name: string): string {
+    return name.split(' ').map(n => n[0]).join('');
+  }
+}

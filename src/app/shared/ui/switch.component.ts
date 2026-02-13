@@ -1,4 +1,4 @@
-import { Component, Input, forwardRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, forwardRef } from '@angular/core';
 import { NgClass } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
@@ -37,20 +37,24 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 })
 export class SwitchComponent implements ControlValueAccessor {
   @Input() className = '';
+  @Input() set checked(val: boolean) { this._checked = !!val; }
+  get checked(): boolean { return this._checked; }
+  @Output() checkedChange = new EventEmitter<boolean>();
 
-  checked = false;
+  private _checked = false;
   isDisabled = false;
   onChange: (value: boolean) => void = () => {};
   onTouched: () => void = () => {};
 
   toggle() {
-    this.checked = !this.checked;
-    this.onChange(this.checked);
+    this._checked = !this._checked;
+    this.onChange(this._checked);
+    this.checkedChange.emit(this._checked);
     this.onTouched();
   }
 
   writeValue(value: boolean) {
-    this.checked = !!value;
+    this._checked = !!value;
   }
 
   registerOnChange(fn: (value: boolean) => void) {

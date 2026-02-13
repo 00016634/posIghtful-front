@@ -1,10 +1,8 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { NgFor } from '@angular/common';
 
 @Component({
   selector: 'app-dashboard-filters',
   standalone: true,
-  imports: [NgFor],
   template: `
     <div class="flex flex-wrap items-center gap-3">
       <select
@@ -19,15 +17,18 @@ import { NgFor } from '@angular/common';
         <option value="this_quarter">This Quarter</option>
         <option value="this_year">This Year</option>
       </select>
-      <select
-        *ngIf="products.length"
-        class="flex h-9 w-[200px] items-center rounded-md border border-input bg-input-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-        [value]="selectedProduct"
-        (change)="onProductChange($event)"
-      >
-        <option value="">All Products</option>
-        <option *ngFor="let p of products" [value]="p">{{ p }}</option>
-      </select>
+      @if (products.length) {
+        <select
+          class="flex h-9 w-[200px] items-center rounded-md border border-input bg-input-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+          [value]="selectedProduct"
+          (change)="onProductChange($event)"
+        >
+          <option value="">All Products</option>
+          @for (p of products; track p) {
+            <option [value]="p">{{ p }}</option>
+          }
+        </select>
+      }
     </div>
   `,
 })

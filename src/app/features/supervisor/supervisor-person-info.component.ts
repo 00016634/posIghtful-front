@@ -3,7 +3,7 @@ import { QRCodeComponent } from 'angularx-qrcode';
 import { PageLayoutComponent, PageHeaderComponent } from '../../shared/layouts';
 import {
   CardComponent, CardHeaderComponent, CardTitleComponent, CardContentComponent,
-  AvatarComponent, SeparatorComponent,
+  AvatarComponent,
 } from '../../shared/ui';
 import { AgentService } from '../../services/agent.service';
 
@@ -18,7 +18,6 @@ import { AgentService } from '../../services/agent.service';
     CardTitleComponent,
     CardContentComponent,
     AvatarComponent,
-    SeparatorComponent,
     QRCodeComponent,
   ],
   template: `
