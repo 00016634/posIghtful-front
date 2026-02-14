@@ -17,6 +17,9 @@ export interface Role {
   code: string;
   name: string;
   description?: string;
+  permissions: Record<string, string[]>;
+  color: string;
+  icon: string;
 }
 
 export interface AuthResponse {
