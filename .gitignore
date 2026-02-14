@@ -2,6 +2,7 @@
 
 # Compiled output
 /dist
+src/styles.generated.css
 /tmp
 /out-tsc
 /bazel-out
