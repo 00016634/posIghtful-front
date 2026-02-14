@@ -39,13 +39,12 @@ export const guestGuard: CanActivateFn = () => {
 
 function getRoleDashboardPath(authService: AuthService): string {
   const user = authService.currentUserValue;
-  const role = user?.roles?.[0]?.name;
-  switch (role) {
+  const code = user?.roles?.[0]?.code;
+  switch (code) {
     case 'AGENT': return '/agent';
     case 'SUPERVISOR': return '/supervisor';
     case 'MANAGER': return '/manager';
-    case 'ACCOUNTANT':
-    case 'FINANCE': return '/accountant';
+    case 'ACCOUNTANT': return '/accountant';
     case 'ADMIN': return '/admin';
     default: return '/';
   }

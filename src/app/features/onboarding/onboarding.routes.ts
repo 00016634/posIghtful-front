@@ -5,16 +5,19 @@ export const onboardingRoutes: Routes = [
     path: '',
     loadComponent: () => import('./role-selector.component').then(m => m.RoleSelectorComponent),
   },
+];
+
+export const purchaseRoutes: Routes = [
   {
-    path: 'purchase',
+    path: '',
     loadComponent: () => import('./platform-purchase.component').then(m => m.PlatformPurchaseComponent),
   },
   {
-    path: 'purchase/payment',
+    path: 'payment',
     loadComponent: () => import('./payment.component').then(m => m.PaymentComponent),
   },
   {
-    path: 'purchase/setup',
+    path: 'setup',
     loadComponent: () => import('./tenant-setup.component').then(m => m.TenantSetupComponent),
   },
 ];

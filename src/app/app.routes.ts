@@ -5,6 +5,7 @@ export const routes: Routes = [
   {
     path: '',
     loadChildren: () => import('./features/onboarding/onboarding.routes').then(m => m.onboardingRoutes),
+    canActivate: [authGuard],
   },
   {
     path: 'login',
@@ -15,6 +16,10 @@ export const routes: Routes = [
     path: 'register',
     loadComponent: () => import('./features/auth/register/register.component').then(m => m.RegisterComponent),
     canActivate: [guestGuard],
+  },
+  {
+    path: 'purchase',
+    loadChildren: () => import('./features/onboarding/onboarding.routes').then(m => m.purchaseRoutes),
   },
   {
     path: 'agent',
