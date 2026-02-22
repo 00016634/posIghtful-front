@@ -13,6 +13,12 @@ export interface TenantSetupData {
 }
 
 export interface PricingPlan {
+  id: number;
   name: string;
   price: number;
+  description: string;
+  max_agents: number;
+  storage_limit: string;
+  features: string[];
+  is_active: boolean;
 }

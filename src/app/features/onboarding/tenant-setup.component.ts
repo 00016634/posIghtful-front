@@ -9,6 +9,8 @@ import { InputComponent } from '../../shared/ui/input.component';
 import { SelectComponent } from '../../shared/ui/select.component';
 import { ButtonComponent } from '../../shared/ui/button.component';
 import { ProgressComponent } from '../../shared/ui/progress.component';
+import { OnboardingService, OnboardingPayload } from '../../services/onboarding.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-tenant-setup',
@@ -165,15 +167,29 @@ import { ProgressComponent } from '../../shared/ui/progress.component';
               </ui-button>
               <ui-button
                 size="lg"
-                [disabled]="adminForm.invalid"
+                [disabled]="adminForm.invalid || submitting()"
                 (click)="finish()">
-                Complete Setup
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2">
-                  <path d="M20 6 9 17l-5-5"/>
-                </svg>
+                @if (submitting()) {
+                  <svg class="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Setting up...
+                } @else {
+                  Complete Setup
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2">
+                    <path d="M20 6 9 17l-5-5"/>
+                  </svg>
+                }
               </ui-button>
             </ui-card-footer>
           </ui-card>
+        }
+
+        @if (errorMessage()) {
+          <div class="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+            {{ errorMessage() }}
+          </div>
         }
       </div>
     </app-page-layout>
@@ -182,9 +198,13 @@ import { ProgressComponent } from '../../shared/ui/progress.component';
 export class TenantSetupComponent {
   private fb = inject(FormBuilder);
   private router = inject(Router);
+  private onboardingService = inject(OnboardingService);
+  private authService = inject(AuthService);
 
   currentStep = signal(1);
   progressValue = computed(() => this.currentStep() === 1 ? 50 : 100);
+  submitting = signal(false);
+  errorMessage = signal('');
 
   companySizes = ['1-10', '11-50', '51-200', '201-500', '500+'];
   industries = ['Insurance', 'Real Estate', 'Financial Services', 'Retail', 'Other'];
@@ -201,6 +221,14 @@ export class TenantSetupComponent {
     adminPassword: ['', [Validators.required, Validators.minLength(8)]],
   });
 
+  constructor() {
+    const plan = this.onboardingService.selectedPlan();
+    const payment = this.onboardingService.paymentData();
+    if (!plan || !payment) {
+      this.router.navigateByUrl('/purchase');
+    }
+  }
+
   nextStep() {
     if (this.companyForm.valid) {
       this.currentStep.set(2);
@@ -214,10 +242,55 @@ export class TenantSetupComponent {
   }
 
   finish() {
-    if (this.adminForm.valid) {
-      this.router.navigateByUrl('/admin');
-    } else {
+    if (this.adminForm.invalid) {
       this.adminForm.markAllAsTouched();
+      return;
     }
+
+    const plan = this.onboardingService.selectedPlan();
+    const payment = this.onboardingService.paymentData();
+    if (!plan || !payment) {
+      this.router.navigateByUrl('/purchase');
+      return;
+    }
+
+    const company = this.companyForm.value;
+    const admin = this.adminForm.value;
+
+    const payload: OnboardingPayload = {
+      plan_id: plan.id,
+      card_number: payment.cardNumber,
+      cardholder_name: payment.cardholderName,
+      expiry: payment.expiry,
+      cvv: payment.cvv,
+      billing_email: payment.billingEmail,
+      company_name: company.companyName!,
+      company_size: company.companySize!,
+      industry: company.industry!,
+      admin_full_name: admin.adminName!,
+      admin_email: admin.adminEmail!,
+      admin_password: admin.adminPassword!,
+    };
+
+    this.submitting.set(true);
+    this.errorMessage.set('');
+
+    this.onboardingService.submitOnboarding(payload).subscribe({
+      next: (response) => {
+        this.authService.setSession(response);
+        this.onboardingService.clear();
+        this.router.navigateByUrl('/admin');
+      },
+      error: (err) => {
+        this.submitting.set(false);
+        const detail = err.error;
+        if (typeof detail === 'object' && detail !== null) {
+          const messages = Object.values(detail).flat();
+          this.errorMessage.set(messages.join(' '));
+        } else {
+          this.errorMessage.set('Something went wrong. Please try again.');
+        }
+      },
+    });
   }
 }

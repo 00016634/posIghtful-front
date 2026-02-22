@@ -50,6 +50,13 @@ export class AuthService {
     );
   }
 
+  setSession(response: AuthResponse): void {
+    localStorage.setItem('access_token', response.access);
+    localStorage.setItem('refresh_token', response.refresh);
+    localStorage.setItem('currentUser', JSON.stringify(response.user));
+    this.currentUserSubject.next(response.user);
+  }
+
   logout(): void {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');

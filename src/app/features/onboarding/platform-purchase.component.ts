@@ -1,14 +1,12 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { CardComponent, CardHeaderComponent, CardTitleComponent, CardDescriptionComponent, CardContentComponent, CardFooterComponent } from '../../shared/ui/card.component';
 import { ButtonComponent } from '../../shared/ui/button.component';
 import { BadgeComponent } from '../../shared/ui/badge.component';
+import { OnboardingService } from '../../services/onboarding.service';
+import { PricingPlan } from '../../models/tenant.model';
 
-interface Plan {
-  name: string;
-  price: number;
-  description: string;
-  features: string[];
+interface Plan extends PricingPlan {
   popular: boolean;
 }
 
@@ -35,6 +33,9 @@ interface Plan {
       </div>
 
       <div class="grid md:grid-cols-3 gap-8 max-w-5xl w-full">
+        @if (loading()) {
+          <div class="col-span-3 text-center py-12 text-muted-foreground">Loading plans...</div>
+        }
         @for (plan of plans(); track plan.name) {
           <ui-card [className]="plan.popular
             ? 'relative border-2 border-primary shadow-xl scale-105'
@@ -83,57 +84,32 @@ interface Plan {
     </div>
   `,
 })
-export class PlatformPurchaseComponent {
-  plans = signal<Plan[]>([
-    {
-      name: 'Starter',
-      price: 299,
-      description: 'Perfect for small teams getting started',
-      features: [
-        'Up to 5 agents',
-        'Basic analytics dashboard',
-        'Lead management',
-        'Email support',
-        '1 GB storage',
-      ],
-      popular: false,
-    },
-    {
-      name: 'Professional',
-      price: 799,
-      description: 'Best for growing sales organizations',
-      features: [
-        'Up to 25 agents',
-        'Advanced analytics & reports',
-        'Lead & conversion tracking',
-        'Bonus management',
-        'Priority support',
-        '10 GB storage',
-        'Custom branding',
-      ],
-      popular: true,
-    },
-    {
-      name: 'Enterprise',
-      price: 1999,
-      description: 'For large organizations with complex needs',
-      features: [
-        'Unlimited agents',
-        'Full analytics suite',
-        'Advanced bonus rules engine',
-        'Product funnel management',
-        'Dedicated account manager',
-        'Unlimited storage',
-        'API access',
-        'SSO & SAML',
-      ],
-      popular: false,
-    },
-  ]);
+export class PlatformPurchaseComponent implements OnInit {
+  private router = inject(Router);
+  private onboardingService = inject(OnboardingService);
 
-  constructor(private router: Router) {}
+  plans = signal<Plan[]>([]);
+  loading = signal(true);
+
+  ngOnInit() {
+    this.onboardingService.getPlans().subscribe({
+      next: (plans) => {
+        this.plans.set(
+          plans.map(p => ({
+            ...p,
+            popular: p.name === 'Professional',
+          }))
+        );
+        this.loading.set(false);
+      },
+      error: () => {
+        this.loading.set(false);
+      },
+    });
+  }
 
   selectPlan(plan: Plan) {
+    this.onboardingService.selectedPlan.set(plan);
     this.router.navigateByUrl('/purchase/payment');
   }
 }

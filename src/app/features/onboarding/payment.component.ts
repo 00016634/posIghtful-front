@@ -1,4 +1,4 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, signal, inject, computed, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { PageLayoutComponent } from '../../shared/layouts/page-layout.component';
@@ -8,6 +8,7 @@ import { LabelComponent } from '../../shared/ui/label.component';
 import { InputComponent } from '../../shared/ui/input.component';
 import { ButtonComponent } from '../../shared/ui/button.component';
 import { SeparatorComponent } from '../../shared/ui/separator.component';
+import { OnboardingService } from '../../services/onboarding.service';
 
 @Component({
   selector: 'app-payment',
@@ -129,8 +130,8 @@ import { SeparatorComponent } from '../../shared/ui/separator.component';
             <ui-card-content>
               <div class="space-y-4">
                 <div class="flex justify-between">
-                  <span class="text-muted-foreground">Professional Plan</span>
-                  <span class="font-medium">$799.00</span>
+                  <span class="text-muted-foreground">{{ planName() }} Plan</span>
+                  <span class="font-medium">\${{ planPrice().toFixed(2) }}</span>
                 </div>
                 <div class="flex justify-between">
                   <span class="text-muted-foreground">Setup Fee</span>
@@ -138,12 +139,12 @@ import { SeparatorComponent } from '../../shared/ui/separator.component';
                 </div>
                 <div class="flex justify-between">
                   <span class="text-muted-foreground">Tax</span>
-                  <span class="font-medium">$95.88</span>
+                  <span class="font-medium">\${{ tax().toFixed(2) }}</span>
                 </div>
                 <ui-separator></ui-separator>
                 <div class="flex justify-between">
                   <span class="font-semibold">Total</span>
-                  <span class="font-bold text-lg">$894.88</span>
+                  <span class="font-bold text-lg">\${{ total().toFixed(2) }}</span>
                 </div>
               </div>
 
@@ -167,11 +168,17 @@ import { SeparatorComponent } from '../../shared/ui/separator.component';
     </app-page-layout>
   `,
 })
-export class PaymentComponent {
+export class PaymentComponent implements OnInit {
   private fb = inject(FormBuilder);
   private router = inject(Router);
+  private onboardingService = inject(OnboardingService);
 
   processing = signal(false);
+
+  planName = computed(() => this.onboardingService.selectedPlan()?.name ?? 'Professional');
+  planPrice = computed(() => this.onboardingService.selectedPlan()?.price ?? 0);
+  tax = computed(() => this.planPrice() * 0.12);
+  total = computed(() => this.planPrice() + this.tax());
 
   paymentForm = this.fb.group({
     cardNumber: ['', [Validators.required, Validators.minLength(13)]],
@@ -181,17 +188,27 @@ export class PaymentComponent {
     billingEmail: ['', [Validators.required, Validators.email]],
   });
 
+  ngOnInit() {
+    if (!this.onboardingService.selectedPlan()) {
+      this.router.navigateByUrl('/purchase');
+    }
+  }
+
   onSubmit() {
     if (this.paymentForm.invalid) {
       this.paymentForm.markAllAsTouched();
       return;
     }
 
-    this.processing.set(true);
+    const form = this.paymentForm.value;
+    this.onboardingService.paymentData.set({
+      cardNumber: form.cardNumber!,
+      cardholderName: form.cardholderName!,
+      expiry: form.expiry!,
+      cvv: form.cvv!,
+      billingEmail: form.billingEmail!,
+    });
 
-    setTimeout(() => {
-      this.processing.set(false);
-      this.router.navigateByUrl('/purchase/setup');
-    }, 1500);
+    this.router.navigateByUrl('/purchase/setup');
   }
 }
