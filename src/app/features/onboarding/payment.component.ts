@@ -3,11 +3,17 @@ import { Router } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { PageLayoutComponent } from '../../shared/layouts/page-layout.component';
 import { PageHeaderComponent } from '../../shared/layouts/page-header.component';
-import { CardComponent, CardHeaderComponent, CardTitleComponent, CardContentComponent } from '../../shared/ui/card.component';
+import {
+  CardComponent,
+  CardHeaderComponent,
+  CardTitleComponent,
+  CardDescriptionComponent,
+  CardContentComponent,
+} from '../../shared/ui/card.component';
 import { LabelComponent } from '../../shared/ui/label.component';
 import { InputComponent } from '../../shared/ui/input.component';
+import { SelectComponent } from '../../shared/ui/select.component';
 import { ButtonComponent } from '../../shared/ui/button.component';
-import { SeparatorComponent } from '../../shared/ui/separator.component';
 import { OnboardingService } from '../../services/onboarding.service';
 
 @Component({
@@ -20,149 +26,191 @@ import { OnboardingService } from '../../services/onboarding.service';
     CardComponent,
     CardHeaderComponent,
     CardTitleComponent,
+    CardDescriptionComponent,
     CardContentComponent,
     LabelComponent,
     InputComponent,
+    SelectComponent,
     ButtonComponent,
-    SeparatorComponent,
   ],
   template: `
     <app-page-layout>
-      <app-page-header
-        title="Payment"
-        subtitle="Enter your payment details to complete the purchase"
-        backRoute="/purchase">
-      </app-page-header>
-
-      <div class="grid lg:grid-cols-3 gap-8">
-        <!-- Payment Form -->
-        <div class="lg:col-span-2">
-          <ui-card>
-            <ui-card-header>
-              <ui-card-title>Payment Details</ui-card-title>
-            </ui-card-header>
-            <ui-card-content>
-              <form [formGroup]="paymentForm" (ngSubmit)="onSubmit()" class="space-y-6">
-                <div class="space-y-2">
-                  <ui-label htmlFor="cardNumber">Card Number</ui-label>
-                  <ui-input
-                    formControlName="cardNumber"
-                    placeholder="1234 5678 9012 3456">
-                  </ui-input>
-                  @if (paymentForm.get('cardNumber')?.invalid && paymentForm.get('cardNumber')?.touched) {
-                    <p class="text-sm text-red-600">Card number is required</p>
-                  }
-                </div>
-
-                <div class="space-y-2">
-                  <ui-label htmlFor="cardholderName">Cardholder Name</ui-label>
-                  <ui-input
-                    formControlName="cardholderName"
-                    placeholder="John Doe">
-                  </ui-input>
-                  @if (paymentForm.get('cardholderName')?.invalid && paymentForm.get('cardholderName')?.touched) {
-                    <p class="text-sm text-red-600">Cardholder name is required</p>
-                  }
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                  <div class="space-y-2">
-                    <ui-label htmlFor="expiry">Expiry Date</ui-label>
-                    <ui-input
-                      formControlName="expiry"
-                      placeholder="MM/YY">
-                    </ui-input>
-                    @if (paymentForm.get('expiry')?.invalid && paymentForm.get('expiry')?.touched) {
-                      <p class="text-sm text-red-600">Valid expiry date required (MM/YY)</p>
-                    }
-                  </div>
-                  <div class="space-y-2">
-                    <ui-label htmlFor="cvv">CVV</ui-label>
-                    <ui-input
-                      formControlName="cvv"
-                      placeholder="123"
-                      type="password">
-                    </ui-input>
-                    @if (paymentForm.get('cvv')?.invalid && paymentForm.get('cvv')?.touched) {
-                      <p class="text-sm text-red-600">CVV is required (3-4 digits)</p>
-                    }
-                  </div>
-                </div>
-
-                <div class="space-y-2">
-                  <ui-label htmlFor="billingEmail">Billing Email</ui-label>
-                  <ui-input
-                    formControlName="billingEmail"
-                    type="email"
-                    placeholder="billing@company.com">
-                  </ui-input>
-                  @if (paymentForm.get('billingEmail')?.invalid && paymentForm.get('billingEmail')?.touched) {
-                    <p class="text-sm text-red-600">A valid email address is required</p>
-                  }
-                </div>
-
-                <ui-button
-                  type="submit"
-                  className="w-full"
-                  size="lg"
-                  [disabled]="paymentForm.invalid || processing()">
-                  @if (processing()) {
-                    <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Processing...
-                  } @else {
-                    Pay Now
-                  }
-                </ui-button>
-              </form>
-            </ui-card-content>
-          </ui-card>
+      <div class="mx-auto max-w-4xl space-y-6">
+        <!-- Header -->
+        <div class="flex items-center gap-4">
+          <ui-button variant="ghost" size="icon" (click)="goBack()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>
+            </svg>
+          </ui-button>
+          <div>
+            <h1 class="text-2xl font-semibold">Payment Details</h1>
+            <p class="text-sm text-gray-600">Complete your purchase securely</p>
+          </div>
         </div>
 
-        <!-- Order Summary Sidebar -->
-        <div class="lg:col-span-1">
-          <ui-card>
-            <ui-card-header>
-              <ui-card-title>Order Summary</ui-card-title>
-            </ui-card-header>
-            <ui-card-content>
-              <div class="space-y-4">
-                <div class="flex justify-between">
-                  <span class="text-muted-foreground">{{ planName() }} Plan</span>
-                  <span class="font-medium">\${{ planPrice().toFixed(2) }}</span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="text-muted-foreground">Setup Fee</span>
-                  <span class="font-medium">$0.00</span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="text-muted-foreground">Tax</span>
-                  <span class="font-medium">\${{ tax().toFixed(2) }}</span>
-                </div>
-                <ui-separator></ui-separator>
-                <div class="flex justify-between">
-                  <span class="font-semibold">Total</span>
-                  <span class="font-bold text-lg">\${{ total().toFixed(2) }}</span>
-                </div>
-              </div>
+        <div class="grid md:grid-cols-3 gap-6">
+          <!-- Payment Form -->
+          <div class="md:col-span-2">
+            <form [formGroup]="paymentForm" (ngSubmit)="onSubmit()">
+              <ui-card>
+                <ui-card-header>
+                  <ui-card-title className="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/>
+                    </svg>
+                    Payment Information
+                  </ui-card-title>
+                  <ui-card-description>
+                    <span class="flex items-center gap-2 text-green-600">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                      </svg>
+                      Your payment information is secure and encrypted
+                    </span>
+                  </ui-card-description>
+                </ui-card-header>
+                <ui-card-content className="space-y-6">
+                  <!-- Card Number -->
+                  <div class="space-y-2">
+                    <ui-label htmlFor="cardNumber">Card Number</ui-label>
+                    <ui-input
+                      formControlName="cardNumber"
+                      placeholder="1234 5678 9012 3456">
+                    </ui-input>
+                    @if (paymentForm.get('cardNumber')?.invalid && paymentForm.get('cardNumber')?.touched) {
+                      <p class="text-sm text-red-600">Card number is required</p>
+                    }
+                  </div>
 
-              <div class="mt-6 p-4 bg-blue-50 rounded-lg">
-                <p class="text-sm text-blue-800 font-medium">14-Day Free Trial</p>
-                <p class="text-xs text-blue-600 mt-1">
-                  You won't be charged until the trial period ends. Cancel anytime.
-                </p>
-              </div>
+                  <!-- Cardholder Name -->
+                  <div class="space-y-2">
+                    <ui-label htmlFor="cardholderName">Cardholder Name</ui-label>
+                    <ui-input
+                      formControlName="cardholderName"
+                      placeholder="John Smith">
+                    </ui-input>
+                    @if (paymentForm.get('cardholderName')?.invalid && paymentForm.get('cardholderName')?.touched) {
+                      <p class="text-sm text-red-600">Cardholder name is required</p>
+                    }
+                  </div>
 
-              <div class="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                </svg>
-                <span>Secured with 256-bit SSL encryption</span>
-              </div>
-            </ui-card-content>
-          </ui-card>
+                  <!-- Expiry and CVV -->
+                  <div class="grid grid-cols-3 gap-4">
+                    <div class="space-y-2">
+                      <ui-label htmlFor="expiryMonth">Expiry Month</ui-label>
+                      <ui-select formControlName="expiryMonth">
+                        <option value="" disabled>Month</option>
+                        @for (month of months; track month.value) {
+                          <option [value]="month.value">{{ month.label }}</option>
+                        }
+                      </ui-select>
+                      @if (paymentForm.get('expiryMonth')?.invalid && paymentForm.get('expiryMonth')?.touched) {
+                        <p class="text-sm text-red-600">Required</p>
+                      }
+                    </div>
+                    <div class="space-y-2">
+                      <ui-label htmlFor="expiryYear">Expiry Year</ui-label>
+                      <ui-select formControlName="expiryYear">
+                        <option value="" disabled>Year</option>
+                        @for (year of years; track year) {
+                          <option [value]="year">{{ year }}</option>
+                        }
+                      </ui-select>
+                      @if (paymentForm.get('expiryYear')?.invalid && paymentForm.get('expiryYear')?.touched) {
+                        <p class="text-sm text-red-600">Required</p>
+                      }
+                    </div>
+                    <div class="space-y-2">
+                      <ui-label htmlFor="cvv">CVV</ui-label>
+                      <ui-input
+                        formControlName="cvv"
+                        placeholder="123"
+                        type="password">
+                      </ui-input>
+                      @if (paymentForm.get('cvv')?.invalid && paymentForm.get('cvv')?.touched) {
+                        <p class="text-sm text-red-600">3-4 digits</p>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Billing Email -->
+                  <div class="space-y-2">
+                    <ui-label htmlFor="billingEmail">Billing Email</ui-label>
+                    <ui-input
+                      formControlName="billingEmail"
+                      type="email"
+                      placeholder="billing@company.com">
+                    </ui-input>
+                    <p class="text-xs text-gray-600">
+                      We'll send your receipt and invoices to this email
+                    </p>
+                    @if (paymentForm.get('billingEmail')?.invalid && paymentForm.get('billingEmail')?.touched) {
+                      <p class="text-sm text-red-600">A valid email address is required</p>
+                    }
+                  </div>
+
+                  <!-- Submit Button -->
+                  <div class="pt-4">
+                    <ui-button
+                      type="submit"
+                      className="w-full"
+                      size="lg"
+                      [disabled]="paymentForm.invalid || processing()">
+                      @if (processing()) {
+                        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Processing...
+                      } @else {
+                        Complete Purchase - \${{ planPrice() }}/month
+                      }
+                    </ui-button>
+                    <p class="text-xs text-center text-gray-600 mt-2">
+                      By completing this purchase, you agree to our Terms of Service and Privacy Policy
+                    </p>
+                  </div>
+                </ui-card-content>
+              </ui-card>
+            </form>
+          </div>
+
+          <!-- Order Summary -->
+          <div>
+            <ui-card>
+              <ui-card-header>
+                <ui-card-title>Order Summary</ui-card-title>
+              </ui-card-header>
+              <ui-card-content className="space-y-4">
+                <div>
+                  <p class="font-semibold">{{ planName() }} Plan</p>
+                  <p class="text-sm text-gray-600">Monthly subscription</p>
+                </div>
+
+                <div class="border-t pt-4 space-y-2">
+                  <div class="flex justify-between text-sm">
+                    <span>Subtotal</span>
+                    <span>\${{ planPrice() }}</span>
+                  </div>
+                  <div class="flex justify-between text-sm text-gray-600">
+                    <span>Tax (0%)</span>
+                    <span>$0</span>
+                  </div>
+                  <div class="border-t pt-2 flex justify-between font-semibold">
+                    <span>Total due today</span>
+                    <span class="text-lg">\${{ planPrice() }}</span>
+                  </div>
+                </div>
+
+                <div class="border-t pt-4 text-sm text-gray-600 space-y-2">
+                  <p>&#10003; 30-day money-back guarantee</p>
+                  <p>&#10003; Cancel anytime</p>
+                  <p>&#10003; Secure payment processing</p>
+                </div>
+              </ui-card-content>
+            </ui-card>
+          </div>
         </div>
       </div>
     </app-page-layout>
@@ -176,14 +224,30 @@ export class PaymentComponent implements OnInit {
   processing = signal(false);
 
   planName = computed(() => this.onboardingService.selectedPlan()?.name ?? 'Professional');
-  planPrice = computed(() => this.onboardingService.selectedPlan()?.price ?? 0);
-  tax = computed(() => this.planPrice() * 0.12);
-  total = computed(() => this.planPrice() + this.tax());
+  planPrice = computed(() => this.onboardingService.selectedPlan()?.price ?? 799);
+
+  currentYear = new Date().getFullYear();
+  years = Array.from({ length: 15 }, (_, i) => this.currentYear + i);
+  months = [
+    { value: '01', label: '01 - January' },
+    { value: '02', label: '02 - February' },
+    { value: '03', label: '03 - March' },
+    { value: '04', label: '04 - April' },
+    { value: '05', label: '05 - May' },
+    { value: '06', label: '06 - June' },
+    { value: '07', label: '07 - July' },
+    { value: '08', label: '08 - August' },
+    { value: '09', label: '09 - September' },
+    { value: '10', label: '10 - October' },
+    { value: '11', label: '11 - November' },
+    { value: '12', label: '12 - December' },
+  ];
 
   paymentForm = this.fb.group({
     cardNumber: ['', [Validators.required, Validators.minLength(13)]],
     cardholderName: ['', [Validators.required]],
-    expiry: ['', [Validators.required, Validators.pattern(/^(0[1-9]|1[0-2])\/\d{2}$/)]],
+    expiryMonth: ['', [Validators.required]],
+    expiryYear: ['', [Validators.required]],
     cvv: ['', [Validators.required, Validators.pattern(/^\d{3,4}$/)]],
     billingEmail: ['', [Validators.required, Validators.email]],
   });
@@ -192,6 +256,10 @@ export class PaymentComponent implements OnInit {
     if (!this.onboardingService.selectedPlan()) {
       this.router.navigateByUrl('/purchase');
     }
+  }
+
+  goBack() {
+    this.router.navigateByUrl('/purchase');
   }
 
   onSubmit() {
@@ -204,7 +272,7 @@ export class PaymentComponent implements OnInit {
     this.onboardingService.paymentData.set({
       cardNumber: form.cardNumber!,
       cardholderName: form.cardholderName!,
-      expiry: form.expiry!,
+      expiry: `${form.expiryMonth}/${String(form.expiryYear).slice(-2)}`,
       cvv: form.cvv!,
       billingEmail: form.billingEmail!,
     });

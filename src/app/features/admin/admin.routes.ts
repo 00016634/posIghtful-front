@@ -17,4 +17,8 @@ export const adminRoutes: Routes = [
     path: 'products',
     loadComponent: () => import('./product-management.component').then(m => m.ProductManagementComponent),
   },
+  {
+    path: 'regions',
+    loadComponent: () => import('./region-management.component').then(m => m.RegionManagementComponent),
+  },
 ];

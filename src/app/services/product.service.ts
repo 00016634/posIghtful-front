@@ -1,15 +1,53 @@
 import { Injectable } from '@angular/core';
-import { of } from 'rxjs';
-import { MOCK_PRODUCTS, MOCK_PRODUCT_FUNNELS } from './mock/mock-product.data';
-import { MOCK_CONVERSIONS } from './mock/mock-conversion.data';
+import { HttpClient } from '@angular/common/http';
+import { Observable, map } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class ProductService {
-  getProducts() { return of(MOCK_PRODUCTS); }
-  getProductById(id: number) { return of(MOCK_PRODUCTS.find(p => p.id === id)); }
-  createProduct(product: any) { return of({ ...product, id: Math.floor(100 + Math.random() * 900) }); }
-  updateProduct(id: number, data: any) { return of({ id, ...data }); }
-  deleteProduct(id: number) { return of(true); }
-  getProductFunnels() { return of(MOCK_PRODUCT_FUNNELS); }
-  getConversions() { return of(MOCK_CONVERSIONS); }
+  private productsUrl = `${environment.apiUrl}/api/tenancy/products`;
+  private pipelinesUrl = `${environment.apiUrl}/api/leads/pipelines`;
+  private stagesUrl = `${environment.apiUrl}/api/leads/stages`;
+  private salesUrl = `${environment.apiUrl}/api/conversions/sales`;
+
+  constructor(private http: HttpClient) {}
+
+  getProducts(): Observable<any[]> {
+    return this.http.get<any>(`${this.productsUrl}/`).pipe(
+      map(res => Array.isArray(res) ? res : res.results ?? [])
+    );
+  }
+
+  getProductById(id: number): Observable<any> {
+    return this.http.get<any>(`${this.productsUrl}/${id}/`);
+  }
+
+  createProduct(product: any): Observable<any> {
+    return this.http.post<any>(`${this.productsUrl}/`, product);
+  }
+
+  updateProduct(id: number, data: any): Observable<any> {
+    return this.http.patch<any>(`${this.productsUrl}/${id}/`, data);
+  }
+
+  deleteProduct(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.productsUrl}/${id}/`);
+  }
+
+  getProductFunnels(): Observable<any[]> {
+    return this.http.get<any>(`${this.pipelinesUrl}/`).pipe(
+      map(res => Array.isArray(res) ? res : res.results ?? []),
+      map(pipelines => pipelines.map((p: any) => ({
+        productId: p.product,
+        productName: p.product_name,
+        stages: [],
+      })))
+    );
+  }
+
+  getConversions(): Observable<any[]> {
+    return this.http.get<any>(`${this.salesUrl}/`).pipe(
+      map(res => Array.isArray(res) ? res : res.results ?? [])
+    );
+  }
 }

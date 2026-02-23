@@ -1,10 +1,11 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { PageLayoutComponent } from '../../shared/layouts/page-layout.component';
 import {
   CardComponent, CardHeaderComponent, CardTitleComponent, CardContentComponent,
   ButtonComponent,
 } from '../../shared/ui';
+import { UserManagementService } from '../../services/user-management.service';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -34,7 +35,7 @@ import {
               <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-blue-600"><rect width="16" height="20" x="4" y="2" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>
               <div>
                 <p class="text-sm text-blue-900 font-medium">Current Tenant</p>
-                <p class="text-lg font-semibold text-blue-900">Acme Insurance Corp</p>
+                <p class="text-lg font-semibold text-blue-900">{{ stats().tenantName }}</p>
               </div>
             </div>
           </ui-card-content>
@@ -46,8 +47,8 @@ import {
               <ui-card-title className="text-sm font-medium">Total Users</ui-card-title>
             </ui-card-header>
             <ui-card-content>
-              <div class="text-2xl font-semibold">48</div>
-              <p class="text-xs text-muted-foreground mt-1">45 active</p>
+              <div class="text-2xl font-semibold">{{ stats().totalUsers }}</div>
+              <p class="text-xs text-muted-foreground mt-1">{{ stats().activeUsers }} active</p>
             </ui-card-content>
           </ui-card>
           <ui-card>
@@ -55,7 +56,7 @@ import {
               <ui-card-title className="text-sm font-medium">Products</ui-card-title>
             </ui-card-header>
             <ui-card-content>
-              <div class="text-2xl font-semibold">8</div>
+              <div class="text-2xl font-semibold">{{ stats().totalProducts }}</div>
               <p class="text-xs text-muted-foreground mt-1">Active products</p>
             </ui-card-content>
           </ui-card>
@@ -87,6 +88,7 @@ import {
             <ui-card-content className="space-y-2">
               <ui-button variant="outline" className="w-full justify-start" (click)="router.navigateByUrl('/admin/users/new')">Create New User</ui-button>
               <ui-button variant="outline" className="w-full justify-start" (click)="router.navigateByUrl('/admin/products')">Add New Product</ui-button>
+              <ui-button variant="outline" className="w-full justify-start" (click)="router.navigateByUrl('/admin/regions')">Manage Regions</ui-button>
               <ui-button variant="outline" className="w-full justify-start" (click)="router.navigateByUrl('/admin/users')">View All Users</ui-button>
             </ui-card-content>
           </ui-card>
@@ -95,17 +97,21 @@ import {
               <ui-card-title>Recent Activity</ui-card-title>
             </ui-card-header>
             <ui-card-content>
-              <div class="space-y-4">
-                @for (a of recentActivity; track a.detail) {
-                  <div class="flex justify-between items-start pb-3 border-b last:border-b-0 last:pb-0">
-                    <div>
-                      <p class="font-medium text-sm">{{ a.action }}</p>
-                      <p class="text-sm text-muted-foreground">{{ a.detail }}</p>
+              @if (recentActivity().length === 0) {
+                <p class="text-sm text-muted-foreground text-center py-4">No recent activity</p>
+              } @else {
+                <div class="space-y-4">
+                  @for (a of recentActivity(); track a.timestamp) {
+                    <div class="flex justify-between items-start pb-3 border-b last:border-b-0 last:pb-0">
+                      <div>
+                        <p class="font-medium text-sm">{{ a.action }}</p>
+                        <p class="text-sm text-muted-foreground">{{ a.detail }}</p>
+                      </div>
+                      <p class="text-xs text-muted-foreground whitespace-nowrap ml-4">{{ a.time }}</p>
                     </div>
-                    <p class="text-xs text-muted-foreground whitespace-nowrap ml-4">{{ a.time }}</p>
-                  </div>
-                }
-              </div>
+                  }
+                </div>
+              }
             </ui-card-content>
           </ui-card>
         </div>
@@ -113,12 +119,19 @@ import {
     </app-page-layout>
   `,
 })
-export class AdminDashboardComponent {
+export class AdminDashboardComponent implements OnInit {
   router = inject(Router);
-  recentActivity = [
-    { action: 'User Created', detail: 'John Smith (Agent)', time: '2 hours ago' },
-    { action: 'Product Added', detail: 'Premium Plus Package', time: '1 day ago' },
-    { action: 'User Updated', detail: 'Sarah Johnson - Role changed to Supervisor', time: '2 days ago' },
-    { action: 'User Created', detail: 'Emily Davis (Agent)', time: '3 days ago' },
-  ];
+  private userService = inject(UserManagementService);
+
+  stats = signal({ tenantName: '—', totalUsers: 0, activeUsers: 0, totalProducts: 0 });
+  recentActivity = signal<{ action: string; detail: string; time: string; timestamp: string }[]>([]);
+
+  ngOnInit() {
+    this.userService.getAdminStats().subscribe({
+      next: (data) => this.stats.set(data),
+    });
+    this.userService.getRecentActivity().subscribe({
+      next: (data) => this.recentActivity.set(data),
+    });
+  }
 }

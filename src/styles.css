@@ -1,4 +1,5 @@
-@import 'tailwindcss';
+@import 'tailwindcss' source(none);
+@source './app/**/*.{ts,html}';
 
 /* ─── Design tokens ported from Figma theme.css ─── */
 

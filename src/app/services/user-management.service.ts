@@ -1,15 +1,43 @@
 import { Injectable } from '@angular/core';
-import { of } from 'rxjs';
-import { MOCK_USERS, MOCK_ADMIN_STATS, MOCK_RECENT_ACTIVITY, MOCK_ACCOUNTANT_DATA } from './mock/mock-user.data';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class UserManagementService {
-  getUsers() { return of(MOCK_USERS); }
-  getUserById(id: number) { return of(MOCK_USERS.find(u => u.id === id)); }
-  createUser(user: any) { return of({ ...user, id: Math.floor(100 + Math.random() * 900) }); }
-  updateUser(id: number, data: any) { return of({ id, ...data }); }
-  deleteUser(id: number) { return of(true); }
-  getAdminStats() { return of(MOCK_ADMIN_STATS); }
-  getRecentActivity() { return of(MOCK_RECENT_ACTIVITY); }
-  getAccountantData() { return of(MOCK_ACCOUNTANT_DATA); }
+  private authUrl = `${environment.apiUrl}/auth`;
+
+  constructor(private http: HttpClient) {}
+
+  getUsers(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.authUrl}/users/`);
+  }
+
+  getUserById(id: number): Observable<any> {
+    return this.http.get<any>(`${this.authUrl}/users/${id}/`);
+  }
+
+  createUser(user: any): Observable<any> {
+    return this.http.post<any>(`${this.authUrl}/users/`, user);
+  }
+
+  updateUser(id: number, data: any): Observable<any> {
+    return this.http.patch<any>(`${this.authUrl}/users/${id}/`, data);
+  }
+
+  deleteUser(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.authUrl}/users/${id}/`);
+  }
+
+  getAdminStats(): Observable<any> {
+    return this.http.get<any>(`${this.authUrl}/admin-stats/`);
+  }
+
+  getRecentActivity(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.authUrl}/recent-activity/`);
+  }
+
+  getAccountantData(): Observable<any> {
+    return this.http.get<any>(`${this.authUrl}/accountant-data/`);
+  }
 }

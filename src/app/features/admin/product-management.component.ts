@@ -110,31 +110,73 @@ export class ProductManagementComponent implements OnInit {
   dialogOpen = signal(false);
   editingProduct = signal<any>(null);
   formData = signal({ name: '', description: '', category: 'Insurance' });
-  ngOnInit() { this.productService.getProducts().subscribe(d => this.products.set(d)); }
+
+  ngOnInit() { this.loadProducts(); }
+
+  private loadProducts() {
+    this.productService.getProducts().subscribe({
+      next: (data) => {
+        this.products.set(data.map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          description: p.description ?? '',
+          category: p.category ?? '',
+          isActive: p.is_active,
+          createdDate: p.created_at
+            ? new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+            : '',
+        })));
+      },
+      error: () => this.toastService.show('Error', 'Failed to load products', 'destructive'),
+    });
+  }
+
   updateFormField(field: string, event: Event) {
     const value = (event.target as HTMLInputElement).value;
     this.formData.update(f => ({ ...f, [field]: value }));
   }
+
   openDialog(product: any) {
     this.editingProduct.set(product);
-    this.formData.set(product ? { name: product.name, description: product.description, category: product.category } : { name: '', description: '', category: 'Insurance' });
+    this.formData.set(product
+      ? { name: product.name, description: product.description, category: product.category }
+      : { name: '', description: '', category: 'Insurance' });
     this.dialogOpen.set(true);
   }
+
   saveProduct() {
     const f = this.formData();
     if (!f.name) { this.toastService.show('Error', 'Product name is required', 'destructive'); return; }
+    const payload = { name: f.name, category: f.category || '' };
     const e = this.editingProduct();
     if (e) {
-      this.products.update(p => p.map(x => x.id === e.id ? { ...x, ...f } : x));
-      this.toastService.show('Updated', 'Product updated successfully');
+      this.productService.updateProduct(e.id, payload).subscribe({
+        next: () => {
+          this.toastService.show('Updated', 'Product updated successfully');
+          this.dialogOpen.set(false);
+          this.loadProducts();
+        },
+        error: () => this.toastService.show('Error', 'Failed to update product', 'destructive'),
+      });
     } else {
-      this.products.update(p => [...p, { id: Date.now(), ...f, isActive: true, createdDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) }]);
-      this.toastService.show('Created', 'Product created successfully');
+      this.productService.createProduct(payload).subscribe({
+        next: () => {
+          this.toastService.show('Created', 'Product created successfully');
+          this.dialogOpen.set(false);
+          this.loadProducts();
+        },
+        error: () => this.toastService.show('Error', 'Failed to create product', 'destructive'),
+      });
     }
-    this.dialogOpen.set(false);
   }
+
   deleteProduct(id: number) {
-    this.products.update(p => p.filter(x => x.id !== id));
-    this.toastService.show('Deleted', 'Product deleted successfully');
+    this.productService.deleteProduct(id).subscribe({
+      next: () => {
+        this.toastService.show('Deleted', 'Product deleted successfully');
+        this.loadProducts();
+      },
+      error: () => this.toastService.show('Error', 'Failed to delete product', 'destructive'),
+    });
   }
 }

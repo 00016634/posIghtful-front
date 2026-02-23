@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { PageLayoutComponent } from '../../shared/layouts/page-layout.component';
@@ -7,6 +7,8 @@ import {
   ButtonComponent, LabelComponent, SwitchComponent,
 } from '../../shared/ui';
 import { ToastService } from '../../shared/ui/toast.service';
+import { RegionService, Region } from '../../services/region.service';
+import { UserManagementService } from '../../services/user-management.service';
 
 @Component({
   selector: 'app-user-form',
@@ -62,12 +64,16 @@ import { ToastService } from '../../shared/ui/toast.service';
                   <ui-label>Region</ui-label>
                   <select class="flex h-9 w-full rounded-md border border-input bg-input-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring" formControlName="region">
                     <option value="">Select region</option>
-                    <option value="North Region">North Region</option>
-                    <option value="South Region">South Region</option>
-                    <option value="East Region">East Region</option>
-                    <option value="West Region">West Region</option>
-                    <option value="HQ">HQ</option>
+                    @for (region of regions(); track region.id) {
+                      <option [value]="region.id">{{ region.name }}</option>
+                    }
                   </select>
+                  @if (regions().length === 0) {
+                    <p class="text-xs text-muted-foreground">
+                      No regions found.
+                      <a class="text-primary underline cursor-pointer" (click)="router.navigateByUrl('/admin/regions')">Add regions</a>
+                    </p>
+                  }
                 </div>
               </div>
               <div class="space-y-2">
@@ -114,23 +120,82 @@ export class UserFormComponent implements OnInit {
   router = inject(Router);
   private fb = inject(FormBuilder);
   private toastService = inject(ToastService);
+  private regionService = inject(RegionService);
+  private userService = inject(UserManagementService);
+
   isEditMode = false;
+  userId: string | null = null;
   form!: FormGroup;
+  regions = signal<Region[]>([]);
+
   ngOnInit() {
-    const userId = this.route.snapshot.paramMap.get('userId');
-    this.isEditMode = !!userId && userId !== 'new';
+    this.userId = this.route.snapshot.paramMap.get('userId');
+    this.isEditMode = !!this.userId && this.userId !== 'new';
+
     this.form = this.fb.group({
-      fullName: ['', Validators.required], email: ['', [Validators.required, Validators.email]],
-      phone: [''], role: ['agent', Validators.required], region: [''], hireDate: [''],
-      password: [''], isActive: [true],
+      fullName: ['', Validators.required],
+      email: ['', [Validators.required, Validators.email]],
+      phone: [''],
+      role: ['agent', Validators.required],
+      region: [''],
+      hireDate: [''],
+      password: [''],
+      isActive: [true],
     });
-    if (this.isEditMode) {
-      this.form.patchValue({ fullName: 'John Smith', email: 'john.smith@company.com', phone: '+998 90 123 45 67', role: 'agent', region: 'North Region', hireDate: '2024-01-15' });
+
+    this.regionService.getRegions().subscribe({
+      next: (data) => this.regions.set(data),
+    });
+
+    if (this.isEditMode && this.userId) {
+      this.userService.getUserById(+this.userId).subscribe({
+        next: (user) => {
+          this.form.patchValue({
+            fullName: user.full_name,
+            email: user.email,
+            phone: user.phone_number || '',
+            role: user.roles?.[0]?.toLowerCase() || 'agent',
+            region: user.region || '',
+            hireDate: user.hire_date || '',
+            isActive: user.is_active,
+          });
+        },
+      });
     }
   }
+
   onSubmit() {
-    if (this.form.invalid) { this.toastService.show('Error', 'Please fill required fields', 'destructive'); return; }
-    this.toastService.show(this.isEditMode ? 'Updated' : 'Created', `User ${this.isEditMode ? 'updated' : 'created'} successfully`);
-    this.router.navigateByUrl('/admin/users');
+    if (this.form.invalid) {
+      this.toastService.show('Error', 'Please fill required fields', 'destructive');
+      return;
+    }
+
+    const val = this.form.value;
+    const payload: any = {
+      full_name: val.fullName,
+      email: val.email,
+      phone_number: val.phone || '',
+      role: val.role,
+    };
+
+    if (this.isEditMode && this.userId) {
+      payload.is_active = val.isActive;
+      this.userService.updateUser(+this.userId, payload).subscribe({
+        next: () => {
+          this.toastService.show('Updated', 'User updated successfully');
+          this.router.navigateByUrl('/admin/users');
+        },
+        error: () => this.toastService.show('Error', 'Failed to update user', 'destructive'),
+      });
+    } else {
+      if (val.password) payload.password = val.password;
+      this.userService.createUser(payload).subscribe({
+        next: () => {
+          this.toastService.show('Created', 'User created successfully');
+          this.router.navigateByUrl('/admin/users');
+        },
+        error: () => this.toastService.show('Error', 'Failed to create user', 'destructive'),
+      });
+    }
   }
 }
